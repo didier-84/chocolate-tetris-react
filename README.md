@@ -1,4 +1,20 @@
-# Getting Started with Create React App
+# Tetris - Chocolate edition 🍫🇧🇪
+
+Forked from [https://github.com/MichaelHoste/tetris-react]
+
+Everyone loves chocolate! Well, maybe not everyone, but most people do. Anyway, I do!
+
+<img width="1020" alt="image" src="https://github.com/didier-84/chocolate-tetris-react/assets/2227137/d5a0cd4e-2120-4700-bbd5-bb5e744b3d86">
+
+## How to play? Use your keyboard
+
+* left: move the piece to the left
+* right: move the piece to the right
+* down: move the piece down
+* up: rotate the piece 90 degrees
+* space: drop the piece into place
+  
+---
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
