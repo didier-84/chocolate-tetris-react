@@ -39,10 +39,12 @@ body {
   clear: both;
 }
 
-.tetris-grid .row .cell {
+.cell {
+  --cell-size:  28px;
+  position: relative;
   box-sizing: border-box;
-  width: 28px;
-  height: 28px;
+  width: var(--cell-size);
+  height: var(--cell-size);
   float: left;
   border: 1px solid black; /*#050084;*/
   border-top: 0px;
@@ -56,6 +58,49 @@ body {
 
 .tetris-grid .row:last-child .cell {
   border-bottom: 0px;
+}
+
+.cell.l-type,
+.cell.j-type {
+   background-color: #84563C;
+}
+
+.cell.i-type,
+.cell.o-type {
+   background-color: #693F26;
+}
+
+.cell.s-type,
+.cell.z-type {
+   background-color: #4f2811;
+}
+
+.cell.t-type {
+  background-color: #371300;
+}
+
+.cell.x-type {
+  background-color: #fafafa;
+}
+
+.cell.g-type {
+  background-color: #555555;
+}
+
+.cell.solid:after {
+  position: absolute;
+  content: '';
+  width: calc(var(--cell-size) / 2);
+  height: calc(var(--cell-size) / 2);
+  top: 0;
+  left: 0;
+  opacity: 0.4;
+  filter: blur(1px);
+  border: calc(var(--cell-size) / 4) solid black;
+  border-top-color: rgba(255, 255, 255, 0.4);
+  border-left-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(0, 0, 0, 0.2);
+  border-right-color: rgba(0, 0, 0, 0.4);
 }
 
 .next-piece {
@@ -83,17 +128,15 @@ body {
   margin-bottom: 35px;
 }
 
-.next-piece .piece-row .piece-cell {
+.next-piece .piece-row .cell {
+  --cell-size:  24px;
   box-sizing: border-box;
-  width: 22px;
-  height: 22px;
   float: left;
-  border-top: 0px;
-  border-right: 0px;
+  border: 0;
 }
 
-.next-piece .piece-row .piece-cell-full {
-  border: 1px solid #222222;
+.next-piece .piece-row .solid {
+  /*border: 1px solid #222222;*/
 }
 
 

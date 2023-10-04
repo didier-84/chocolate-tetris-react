@@ -80,7 +80,7 @@ class Tetris extends React.PureComponent {
     let pieceBottomEmptyLines = 0
 
     for(let i = piece.length - 1; i >= 0; i--) { // Iterate from bottom to top to detect empty lines
-      if(piece[i].every((cell) => cell == ' ')) {
+      if(piece[i].every((cell) => cell === ' ')) {
         pieceBottomEmptyLines += 1
       }
       else {
@@ -127,7 +127,7 @@ class Tetris extends React.PureComponent {
 
   bindKeyboard() {
     document.onkeydown = (e) => {
-      if(e.which == 82) { // r
+      if(e.which === 82) { // r
         this.restart()
       }
 
@@ -331,7 +331,7 @@ class Tetris extends React.PureComponent {
     let   pieceIsBeyondTop = false
 
     for(let i = 0; i < piece.length; i++) { // Iterate from top to bottom to find highest cell
-      if(!piece[i].every((cell) => cell == ' ')) {
+      if(!piece[i].every((cell) => cell === ' ')) {
         pieceIsBeyondTop = this.state.positionY + i < 0
         break
       }
@@ -399,7 +399,7 @@ class Tetris extends React.PureComponent {
     }, 200)
   }
 
-  colorForPosition(i, j) {
+  letterForPosition(i, j) {
     let letter = ' '
 
     // If the cell is filled, use the corresponding color
@@ -424,14 +424,13 @@ class Tetris extends React.PureComponent {
       }
 
       // If still no piece, test if ghost in that position
-      if(letter == ' ' && this.state.piece[ghostI] && this.state.piece[ghostI][ghostJ]) {
+      if(letter === ' ' && this.state.piece[ghostI] && this.state.piece[ghostI][ghostJ]) {
         if(this.state.piece[ghostI][ghostJ] != ' ') {
           letter = 'g'
         }
       }
     }
-
-    return Pieces.COLORS[letter]
+    return letter
   }
 
   next3Pieces() {
@@ -450,11 +449,11 @@ class Tetris extends React.PureComponent {
 
     // Remove empty rows for better alignment
     pieces.forEach((piece) => {
-      while(piece[0].every((cell) => cell == ' ')) {
+      while(piece[0].every((cell) => cell === ' ')) {
         piece.shift() // remove from start (only 'i')
       }
 
-      while(piece[piece.length - 1].every((cell) => cell == ' ')) {
+      while(piece[piece.length - 1].every((cell) => cell === ' ')) {
         piece.pop() // remove from end (fast!)
       }
     })
@@ -496,11 +495,21 @@ class Tetris extends React.PureComponent {
   }
 
   renderCell(cell, i, j) {
+    const letter    = this.letterForPosition(i, j)
+
     const key       = `cell-${i}-${j}`
-    const className = `cell ${key}`
+    let   className = `cell ${key}`
+
+    if (letter !== ' ') {
+      className += ` ${letter}-type`
+
+      if (letter !== 'g' && letter !== 'x') {
+        className += ` solid`
+      }
+    }
 
     return (
-      <div className={className} key={key} style={{ backgroundColor: this.colorForPosition(i, j) }}>
+      <div className={className} key={key}>
         &nbsp;
       </div>
     )
@@ -554,15 +563,15 @@ class Tetris extends React.PureComponent {
   }
 
   renderPieceCell(cell, i, j) {
-    const key       = `piece-cell-${i}-${j}`
-    let className = `piece-cell ${key}`
+    const key     = `cell-${i}-${j}`
+    let className = `cell ${key}`
 
     if(cell != ' ') {
-      className = `${className} piece-cell-full`
+      className = `${className} ${cell}-type solid`
     }
 
     return (
-      <div className={className} key={key} style={{ backgroundColor: Pieces.COLORS[cell] }}>
+      <div className={className} key={key}>
         &nbsp;
       </div>
     )
