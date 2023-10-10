@@ -1,18 +1,18 @@
 import React    from 'react'
 import Pieces   from './utils/Pieces'
-import shuffle  from './utils/FisherYatesShuffle'
 import urlParam from './utils/UrlParam'
 
 import GameOver   from './components/GameOver'
 import Grid       from './components/Grid'
 import NextPieces from './components/NextPieces'
+import Paused     from './components/Paused'
 import Score      from './components/Score'
 
 import './css/styles.css';
 
 class Tetris extends React.PureComponent {
   HEIGHT = urlParam('height', 20)
-  WIDTH  = urlParam('width',  10)
+  WIDTH  = urlParam('width',  5)
   SCORE  = [100, 300, 500, 800] // 1, 2, 3 or 4 lines
   SPEED  = [800, 600, 400, 200, 100, 50, 25]
 
@@ -25,8 +25,9 @@ class Tetris extends React.PureComponent {
       positionX:        0,
       positionY:        0,
       ghostPositionY:   0,
+      paused:           false,
       gameOver:         false,
-      bags:             [this.generateBag7(), this.generateBag7()], // Current 7-bag and next one
+      bags:             [Pieces.generateBag7(), Pieces.generateBag7()], // Current 7-bag and next one
       linesCount:       0, // Total number of cleared lines
       score:            0,
       level:            1,
@@ -70,12 +71,12 @@ class Tetris extends React.PureComponent {
   // playSound(name) {
   //   let sound = this[`${name}Sound`]
 
-  //   if(!sound.paused)
+  //   if (!sound.paused)
   //     sound.pause()
 
   //   sound.currentTime = 0
 
-  //   if(sound.paused)
+  //   if (sound.paused)
   //     sound.play()
   // }
 
@@ -85,7 +86,7 @@ class Tetris extends React.PureComponent {
     let pieceBottomEmptyLines = 0
 
     for(let i = piece.length - 1; i >= 0; i--) { // Iterate from bottom to top to detect empty lines
-      if(piece[i].every((cell) => cell === ' ')) {
+      if (piece[i].every((cell) => cell === ' ')) {
         pieceBottomEmptyLines += 1
       }
       else {
@@ -100,20 +101,16 @@ class Tetris extends React.PureComponent {
     }, this.refreshGhostPositionY)
   }
 
-  generateBag7() {
-    return shuffle([Pieces.i, Pieces.j, Pieces.l, Pieces.o, Pieces.s, Pieces.t, Pieces.z])
-  }
-
   takeNextPiece() {
     const bag       = this.state.bags[0].map((piece) => piece) // clone first bag
     const nextPiece = bag.pop() // take last piece (faster than first)
     let   newBags   = null
 
-    if(bag.length) {
+    if (bag.length) {
       newBags = [bag, this.state.bags[1]]
     }
     else {
-      newBags = [this.state.bags[1], this.generateBag7()] // if first bag is now empty, use second bag and generate new one
+      newBags = [this.state.bags[1], Pieces.generateBag7()] // if first bag is now empty, use second bag and generate new one
     }
 
     this.setState({ bags: newBags })
@@ -132,11 +129,15 @@ class Tetris extends React.PureComponent {
 
   bindKeyboard() {
     document.onkeydown = (e) => {
-      if(e.which === 82) { // r
+      if (e.which === 82) { // r
         this.restart()
       }
 
-      if(!this.state.gameOver) {
+      if (!this.state.gameOver && e.which === 80) { // p
+        this.togglePause()
+      }
+
+      if (!this.state.gameOver && !this.state.paused) {
         switch(e.which) {
           case 37: this.moveLeft();   break;
           case 39: this.moveRight();  break;
@@ -156,14 +157,14 @@ class Tetris extends React.PureComponent {
 
     piece.forEach((pieceRow, i) => {
       pieceRow.forEach((pieceCell, j) => {
-        if(!collision && pieceCell !== ' ') { // ignore empty piece cell and skip of collision already detected
+        if (!collision && pieceCell !== ' ') { // ignore empty piece cell and skip of collision already detected
           const cellPositionY = positionY + i
           const cellPositionX = positionX + j
 
-          if(cellPositionY > this.HEIGHT - 1 || cellPositionX < 0 || cellPositionX > this.WIDTH - 1) { // Test grid boundaries
+          if (cellPositionY > this.HEIGHT - 1 || cellPositionX < 0 || cellPositionX > this.WIDTH - 1) { // Test grid boundaries
             collision = true
           }
-          else if(cellPositionY >= 0 && grid[cellPositionY][cellPositionX] !== ' ') { // Test if overlap between plain piece cell and existing grid
+          else if (cellPositionY >= 0 && grid[cellPositionY][cellPositionX] !== ' ') { // Test if overlap between plain piece cell and existing grid
             collision = true
           }
         }
@@ -201,7 +202,7 @@ class Tetris extends React.PureComponent {
   }
 
   canRotate(rotatedPiece) {
-    if(rotatedPiece[0].includes('o')) { // We don't want to rotate the square!
+    if (rotatedPiece[0].includes('o')) { // We don't want to rotate the square!
       return false
     }
     else {
@@ -215,22 +216,22 @@ class Tetris extends React.PureComponent {
   }
 
   moveLeft() {
-    if(this.canMoveLeft()) {
+    if (this.canMoveLeft()) {
       //this.playSound('move')
       this.setState({ positionX: this.state.positionX - 1 }, this.refreshGhostPositionY)
     }
   }
 
   moveRight() {
-    if(this.canMoveRight()) {
+    if (this.canMoveRight()) {
       //this.playSound('move')
       this.setState({ positionX: this.state.positionX + 1 }, this.refreshGhostPositionY)
     }
   }
 
   moveDown(manualMove = true) {
-    if(this.canMoveDown()) {
-      if(manualMove) {
+    if (this.canMoveDown()) {
+      if (manualMove) {
         //this.playSound('move')
       }
 
@@ -247,7 +248,7 @@ class Tetris extends React.PureComponent {
     const piece        = this.state.piece
     const rotatedPiece = piece[0].map((val, index) => piece.map(row => row[index]).reverse())
 
-    if(this.canRotate(rotatedPiece)) {
+    if (this.canRotate(rotatedPiece)) {
       //this.playSound('rotate')
       this.setState({ piece: rotatedPiece }, this.refreshGhostPositionY)
     }
@@ -275,8 +276,9 @@ class Tetris extends React.PureComponent {
   restart() {
     this.setState({
       grid:             this.emptyGrid(),
+      paused:           false,
       gameOver:         false,
-      bags:             [this.generateBag7(), this.generateBag7()],
+      bags:             [Pieces.generateBag7(), Pieces.generateBag7()],
       linesCount:       0,
       score:            0,
       level:            1,
@@ -285,6 +287,18 @@ class Tetris extends React.PureComponent {
       this.throwNewPiece()
       this.startMovingDown()
     })
+  }
+
+  togglePause() {
+    if (this.state.paused) {
+      this.setState({ paused: false }, () => {
+        this.startMovingDown();
+      })
+    } else {
+      this.setState({ paused: true }, () => {
+        this.stopMovingDown();
+      })
+    }
   }
 
   mergePieceToGrid(callback) {
@@ -298,7 +312,7 @@ class Tetris extends React.PureComponent {
     // Place piece in new grid
     piece.forEach((pieceRow, i) => {
       pieceRow.forEach((pieceCell, j) => {
-        if(pieceCell !== ' ' &&  y + i >= 0) {
+        if (pieceCell !== ' ' &&  y + i >= 0) {
           grid[y + i][x + j] = pieceCell
         }
       })
@@ -310,7 +324,7 @@ class Tetris extends React.PureComponent {
   triggerGameLogic() {
     const fullLinesIndices = this.detectFullLinesIndices()
 
-    if(fullLinesIndices.length) {
+    if (fullLinesIndices.length) {
        this.stopMovingDown()
 
        this.setState({ fullLinesIndices: fullLinesIndices }, () => {
@@ -320,7 +334,7 @@ class Tetris extends React.PureComponent {
          })
        })
     }
-    else if(this.isGameOver()) {
+    else if (this.isGameOver()) {
       //this.playSound('gameOver')
       this.stopMovingDown()
       this.setState({ gameOver: true })
@@ -336,7 +350,7 @@ class Tetris extends React.PureComponent {
     let   pieceIsBeyondTop = false
 
     for(let i = 0; i < piece.length; i++) { // Iterate from top to bottom to find highest cell
-      if(!piece[i].every((cell) => cell === ' ')) {
+      if (!piece[i].every((cell) => cell === ' ')) {
         pieceIsBeyondTop = this.state.positionY + i < 0
         break
       }
@@ -379,7 +393,7 @@ class Tetris extends React.PureComponent {
       let offsetY = 0 // current number of lines to offset
 
       for(let i = this.HEIGHT - 1; i >= 0; i--) { // Iterate from bottom to top to increase offsetY with each full line encountered while copying
-        if(this.state.fullLinesIndices.includes(i)) {
+        if (this.state.fullLinesIndices.includes(i)) {
           offsetY += 1 // skip line!
         }
         else {
@@ -408,8 +422,8 @@ class Tetris extends React.PureComponent {
     let letter = ' '
 
     // If the cell is filled, use the corresponding color
-    if(this.state.grid[i][j] !== ' ') {
-      if(this.state.fullLinesIndices.includes(i)) {
+    if (this.state.grid[i][j] !== ' ') {
+      if (this.state.fullLinesIndices.includes(i)) {
         letter = 'x' // position that will imminently disappear
       }
       else {
@@ -424,13 +438,13 @@ class Tetris extends React.PureComponent {
       const ghostJ = pieceJ
 
       // Test if piece in that position
-      if(this.state.piece[pieceI] && this.state.piece[pieceI][pieceJ]) {
+      if (this.state.piece[pieceI] && this.state.piece[pieceI][pieceJ]) {
         letter = this.state.piece[pieceI][pieceJ]
       }
 
       // If still no piece, test if ghost in that position
-      if(letter === ' ' && this.state.piece[ghostI] && this.state.piece[ghostI][ghostJ]) {
-        if(this.state.piece[ghostI][ghostJ] !== ' ') {
+      if (letter === ' ' && this.state.piece[ghostI] && this.state.piece[ghostI][ghostJ]) {
+        if (this.state.piece[ghostI][ghostJ] !== ' ') {
           letter = 'g'
         }
       }
@@ -443,7 +457,7 @@ class Tetris extends React.PureComponent {
     let pieces = this.state.bags[0].slice(-3).reverse()
 
     // Merge the remaining pieces from next bag, still starting from last
-    if(pieces.length < 3) {
+    if (pieces.length < 3) {
       pieces = pieces.concat(
         this.state.bags[1].slice(-3 + pieces.length).reverse()
       )
@@ -483,6 +497,9 @@ class Tetris extends React.PureComponent {
                score={this.state.score} />
         { this.state.gameOver &&
           <GameOver />
+        }
+        { this.state.paused &&
+          <Paused />
         }
       </div>
     )

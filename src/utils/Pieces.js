@@ -1,4 +1,10 @@
+import shuffle  from './FisherYatesShuffle'
+
 class Pieces {
+  static generateBag7() {
+    return shuffle([this.i, this.j, this.l, this.o, this.s, this.t, this.z])
+  }
+
   static i() {
     return [
       [' ', ' ', ' ', ' '],
