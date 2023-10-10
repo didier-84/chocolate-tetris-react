@@ -1,7 +1,12 @@
-import React    from 'react';
-import Pieces   from './utils/Pieces';
+import React    from 'react'
+import Pieces   from './utils/Pieces'
 import shuffle  from './utils/FisherYatesShuffle'
 import urlParam from './utils/UrlParam'
+
+import GameOver   from './components/GameOver'
+import Grid       from './components/Grid'
+import NextPieces from './components/NextPieces'
+import Score      from './components/Score'
 
 import './css/styles.css';
 
@@ -151,14 +156,14 @@ class Tetris extends React.PureComponent {
 
     piece.forEach((pieceRow, i) => {
       pieceRow.forEach((pieceCell, j) => {
-        if(!collision && pieceCell != ' ') { // ignore empty piece cell and skip of collision already detected
+        if(!collision && pieceCell !== ' ') { // ignore empty piece cell and skip of collision already detected
           const cellPositionY = positionY + i
           const cellPositionX = positionX + j
 
           if(cellPositionY > this.HEIGHT - 1 || cellPositionX < 0 || cellPositionX > this.WIDTH - 1) { // Test grid boundaries
             collision = true
           }
-          else if(cellPositionY >= 0 && grid[cellPositionY][cellPositionX] != ' ') { // Test if overlap between plain piece cell and existing grid
+          else if(cellPositionY >= 0 && grid[cellPositionY][cellPositionX] !== ' ') { // Test if overlap between plain piece cell and existing grid
             collision = true
           }
         }
@@ -211,14 +216,14 @@ class Tetris extends React.PureComponent {
 
   moveLeft() {
     if(this.canMoveLeft()) {
-      this.playSound('move')
+      //this.playSound('move')
       this.setState({ positionX: this.state.positionX - 1 }, this.refreshGhostPositionY)
     }
   }
 
   moveRight() {
     if(this.canMoveRight()) {
-      this.playSound('move')
+      //this.playSound('move')
       this.setState({ positionX: this.state.positionX + 1 }, this.refreshGhostPositionY)
     }
   }
@@ -226,7 +231,7 @@ class Tetris extends React.PureComponent {
   moveDown(manualMove = true) {
     if(this.canMoveDown()) {
       if(manualMove) {
-        this.playSound('move')
+        //this.playSound('move')
       }
 
       this.setState({ positionY: this.state.positionY + 1 })
@@ -243,7 +248,7 @@ class Tetris extends React.PureComponent {
     const rotatedPiece = piece[0].map((val, index) => piece.map(row => row[index]).reverse())
 
     if(this.canRotate(rotatedPiece)) {
-      this.playSound('rotate')
+      //this.playSound('rotate')
       this.setState({ piece: rotatedPiece }, this.refreshGhostPositionY)
     }
   }
@@ -254,7 +259,7 @@ class Tetris extends React.PureComponent {
     const x        = this.state.positionX
     let   currentY = this.state.positionY + 1
 
-    this.playSound('drop')
+    //this.playSound('drop')
 
     while(!this.hasCollision(grid, piece, x, currentY)) {
       currentY += 1
@@ -293,7 +298,7 @@ class Tetris extends React.PureComponent {
     // Place piece in new grid
     piece.forEach((pieceRow, i) => {
       pieceRow.forEach((pieceCell, j) => {
-        if(pieceCell != ' ' &&  y + i >= 0) {
+        if(pieceCell !== ' ' &&  y + i >= 0) {
           grid[y + i][x + j] = pieceCell
         }
       })
@@ -316,7 +321,7 @@ class Tetris extends React.PureComponent {
        })
     }
     else if(this.isGameOver()) {
-      this.playSound('gameOver')
+      //this.playSound('gameOver')
       this.stopMovingDown()
       this.setState({ gameOver: true })
     }
@@ -327,7 +332,7 @@ class Tetris extends React.PureComponent {
 
   isGameOver() {
     const piece            = this.state.piece
-    const gridFullToTheTop = this.state.grid[0].some((cell) => cell != ' ')
+    const gridFullToTheTop = this.state.grid[0].some((cell) => cell !== ' ')
     let   pieceIsBeyondTop = false
 
     for(let i = 0; i < piece.length; i++) { // Iterate from top to bottom to find highest cell
@@ -367,7 +372,7 @@ class Tetris extends React.PureComponent {
   }
 
   clearLines(callback) {
-    this.playSound('clear')
+    //this.playSound('clear')
 
     setTimeout(() => {
       let newGrid = this.emptyGrid()
@@ -385,7 +390,7 @@ class Tetris extends React.PureComponent {
       }
 
       const newLinesCount = this.state.linesCount + offsetY
-      const linesScore    = offsetY != 0 ? this.SCORE[offsetY-1] : 0
+      const linesScore    = offsetY !== 0 ? this.SCORE[offsetY-1] : 0
       const newScore      = this.state.score + linesScore * this.state.level
       const newLevel      = this.state.linesCount % 10 > newLinesCount % 10 ? this.state.level + 1 : this.state.level // only if it passes the upper ten (modulo hack)
 
@@ -425,7 +430,7 @@ class Tetris extends React.PureComponent {
 
       // If still no piece, test if ghost in that position
       if(letter === ' ' && this.state.piece[ghostI] && this.state.piece[ghostI][ghostJ]) {
-        if(this.state.piece[ghostI][ghostJ] != ' ') {
+        if(this.state.piece[ghostI][ghostJ] !== ' ') {
           letter = 'g'
         }
       }
@@ -466,113 +471,19 @@ class Tetris extends React.PureComponent {
       <div className="tetris-container">
         <div className="tetris">
           <div className="tetris-grid">
-            { this.renderGrid() }
+            <Grid grid={this.state.grid}
+                  letterForPosition={this.letterForPosition.bind(this)} />
           </div>
           <div className="next-piece">
             <h2>Next</h2>
-            { this.renderNextPieces() }
+            <NextPieces pieces={this.next3Pieces()} />
           </div>
         </div>
-        { this.renderScore() }
-        { this.renderGameOver() }
-      </div>
-    )
-  }
-
-  renderGrid() {
-    return this.state.grid.map((row, i) => this.renderRow(row, i))
-  }
-
-  renderRow(row, i) {
-    const key       = `row-${i}`
-    const className = `row ${key}`
-
-    return (
-      <div className={className} key={key}>
-        { row.map((cell, j) => this.renderCell(cell, i, j)) }
-      </div>
-    )
-  }
-
-  renderCell(cell, i, j) {
-    const letter    = this.letterForPosition(i, j)
-
-    const key       = `cell-${i}-${j}`
-    let   className = `cell ${key}`
-
-    if (letter !== ' ') {
-      className += ` ${letter}-type`
-
-      if (letter !== 'g' && letter !== 'x') {
-        className += ` solid`
-      }
-    }
-
-    return (
-      <div className={className} key={key}>
-        &nbsp;
-      </div>
-    )
-  }
-
-  renderScore() {
-    return (
-      <div className="score">
-        { this.state.score }
-
-        <div className="level">
-          Level {this.state.level}
-        </div>
-      </div>
-    )
-  }
-
-  renderGameOver() {
-    if(this.state.gameOver) {
-      return (
-        <div className="game-over">
-          Game Over
-          <br/>
-          <small>
-            Press 'r' to try again
-          </small>
-        </div>
-      )
-    }
-  }
-
-  renderNextPieces() {
-    return this.next3Pieces().map((piece, i) => {
-      return (
-        <div className="piece" key={i}>
-          { piece.map((row, i) => this.renderPieceRow(row, i)) }
-        </div>
-      )
-    })
-  }
-
-  renderPieceRow(row, i) {
-    const key       = `piece-row-${i}`
-    const className = `piece-row ${key}`
-
-    return (
-      <div className={className} key={key}>
-        { row.map((cell, j) => this.renderPieceCell(cell, i, j)) }
-      </div>
-    )
-  }
-
-  renderPieceCell(cell, i, j) {
-    const key     = `cell-${i}-${j}`
-    let className = `cell ${key}`
-
-    if(cell != ' ') {
-      className = `${className} ${cell}-type solid`
-    }
-
-    return (
-      <div className={className} key={key}>
-        &nbsp;
+        <Score level={this.state.level}
+               score={this.state.score} />
+        { this.state.gameOver &&
+          <GameOver />
+        }
       </div>
     )
   }
