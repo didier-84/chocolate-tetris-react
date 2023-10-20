@@ -1,5 +1,9 @@
+import Pieces from './../utils/Pieces'
+
 export default function NextPieces(props) {
-  const { pieces } = props
+  const { bags } = props
+
+  const pieces = Pieces.next3pieces(bags)
 
   function renderPieceRow(row, i) {
     const key       = `piece-row-${i}`

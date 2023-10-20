@@ -12,7 +12,7 @@ import './css/styles.css';
 
 class Tetris extends React.PureComponent {
   HEIGHT = urlParam('height', 20)
-  WIDTH  = urlParam('width',  5)
+  WIDTH  = urlParam('width',  10)
   SCORE  = [100, 300, 500, 800] // 1, 2, 3 or 4 lines
   SPEED  = [800, 600, 400, 200, 100, 50, 25]
 
@@ -452,34 +452,6 @@ class Tetris extends React.PureComponent {
     return letter
   }
 
-  next3Pieces() {
-    // Take 3 next pieces from first bag (starting from last)
-    let pieces = this.state.bags[0].slice(-3).reverse()
-
-    // Merge the remaining pieces from next bag, still starting from last
-    if (pieces.length < 3) {
-      pieces = pieces.concat(
-        this.state.bags[1].slice(-3 + pieces.length).reverse()
-      )
-    }
-
-    // Need to call the function to generate piece
-    pieces = pieces.map((piece) => piece())
-
-    // Remove empty rows for better alignment
-    pieces.forEach((piece) => {
-      while(piece[0].every((cell) => cell === ' ')) {
-        piece.shift() // remove from start (only 'i')
-      }
-
-      while(piece[piece.length - 1].every((cell) => cell === ' ')) {
-        piece.pop() // remove from end (fast!)
-      }
-    })
-
-    return pieces
-  }
-
   render() {
     return (
       <div className="tetris-container">
@@ -490,7 +462,7 @@ class Tetris extends React.PureComponent {
           </div>
           <div className="next-piece">
             <h2>Next</h2>
-            <NextPieces pieces={this.next3Pieces()} />
+            <NextPieces bags={this.state.bags} />
           </div>
         </div>
         <Score level={this.state.level}
